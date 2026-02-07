@@ -11,7 +11,7 @@ interface Config {
 const config: Config = {
   port: Number(process.env.PORT) || 8080,
   nodeEnv: process.env.NODE_ENV || "development",
-  redisUrl: process.env.REDIS_URL || "redis://localhost:6380",
+  redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
 };
 
 export default config;
