@@ -1,11 +1,11 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import redisClient from "./config/redis";
 
 async function whenIdempotent<T>(idempotentKey: string, func: () => Promise<T>): Promise<T> {
   // check if we have already done this
-  const cachedValue = await redisClient.get('idempotency:' + idempotentKey);
+  const cachedValue = await redisClient.get("idempotency:" + idempotentKey);
   if (cachedValue) {
-    console.log('Duplicate request for key ' + idempotentKey + ' Returning cached result.');
+    console.log("Duplicate request for key " + idempotentKey + " Returning cached result.");
     return JSON.parse(cachedValue);
   }
 
@@ -13,33 +13,29 @@ async function whenIdempotent<T>(idempotentKey: string, func: () => Promise<T>):
   const value = await func();
 
   // save the value for later retry. expiry set to 24 hours (86400 seconds)
-  await redisClient.set('idempotency:' + idempotentKey, JSON.stringify(value), {
-    EX: 86400
+  await redisClient.set("idempotency:" + idempotentKey, JSON.stringify(value), {
+    EX: 86400,
   });
 
   return value;
 }
 
 export const handleRequest = async (req: Request, res: Response) => {
-    try {
-        const idempotentKey = req.headers['Idempotency-Key'] as string;
-        if (!idempotentKey) {
-            return res.status(400).json({ error: "Idempotency-Key header is required" });
-        }
-
-        const result = await whenIdempotent(idempotentKey, async () => {
-            // dummy function
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            return { success: true, message: "Operation completed successfully" };
-        });
-        
-        res.json(result);
-
-    } catch (error) {
-        console.error("Error handling request:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+  try {
+    const idempotentKey = req.headers["Idempotency-Key"] as string;
+    if (!idempotentKey) {
+      return res.status(400).json({ error: "Idempotency-Key header is required" });
     }
 
+    const result = await whenIdempotent(idempotentKey, async () => {
+      // dummy function
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return { success: true, message: "Operation completed successfully" };
+    });
 
-
-}
+    res.json(result);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
