@@ -5,11 +5,13 @@ dotenv.config();
 interface Config {
   port: number;
   nodeEnv: string;
+  redisUrl: string;
 }
 
 const config: Config = {
   port: Number(process.env.PORT) || 8080,
   nodeEnv: process.env.NODE_ENV || "development",
+  redisUrl: process.env.REDIS_URL || "redis://localhost:6380",
 };
 
 export default config;

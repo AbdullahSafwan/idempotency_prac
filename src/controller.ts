@@ -17,12 +17,14 @@ async function whenIdempotent<T>(idempotentKey: string, func: () => Promise<T>):
     EX: 86400,
   });
 
+  console.log("Completed operation for key " + idempotentKey + " and cached the result.");
+
   return value;
 }
 
 export const handleRequest = async (req: Request, res: Response) => {
   try {
-    const idempotentKey = req.headers["Idempotency-Key"] as string;
+    const idempotentKey = req.headers["idempotency-key"] as string;
     if (!idempotentKey) {
       return res.status(400).json({ error: "Idempotency-Key header is required" });
     }
@@ -39,3 +41,9 @@ export const handleRequest = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+const controller = {
+  handleRequest,
+};
+
+export default controller;
